@@ -70,13 +70,20 @@ def _build_exception():
     return e
     
     
+def recv_sleep( source ):
+    while not comm.Iprobe(source=source):
+        time.sleep(0.001)
+    return comm.recv(source=source)
+
+recv = recv_sleep
 
 def worker():
     
     while True:
         comm.send((rank, ACTION_GET, None), dest=0)
         if verbose : print '%d waiting get' % (rank)
-        (task_id, f, args, kwArgs) = comm.recv(source=0)
+        
+        (task_id, f, args, kwArgs) = recv(source=0)
         if task_id == QUIT_SIGNAL : break 
         
         if f is None: # nothing to do 
@@ -113,7 +120,7 @@ class MainLoop(Thread):
         while True:
             
             if verbose : print 'listening ...'
-            (dst_rank, action, data) = comm.recv(source=MPI.ANY_SOURCE)
+            (dst_rank, action, data) = recv(source=MPI.ANY_SOURCE)
             if verbose : print 'Recieved action'
             if action == ACTION_GET:
                 
@@ -143,9 +150,7 @@ class MainLoop(Thread):
                                 
             elif action == ACTION_OUT:
                 (task_id_, out) = data
-#                if isinstance(out,ExceptionInfo):
-#                    sys.stderr.write(out.tb)
-#                    comm.Abort(1)
+
                     
                 (callback, cbArgs) = callback_dict[task_id_]
                 if verbose : print 'Calling Back answer from %d with %s' % (dst_rank, str(callback))
