@@ -27,7 +27,7 @@ import gzip
 import cPickle
 import signal
 import thread
-from jobDispatcher import dispatch
+from pyjobber import dispatch
 
 # gather some paths
 stdoutPath = join( wd, 'stdout' )
