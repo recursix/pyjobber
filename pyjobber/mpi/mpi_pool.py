@@ -31,13 +31,14 @@ except:
     rank = 0
     print "WARNING : mpi4py not installed. Will run in single process."
 
-isMain = rank == 0
-
 verbose = False
 class EmptyQueueD(Exception): pass
 
 class QueueD:
-    
+    """
+    I was having some random bug with python's Queue. I quickly implemented this 
+    and it solved it. 
+    """
     def __init__(self):
         self.d={}
         self.putId = 0
@@ -59,7 +60,7 @@ class QueueD:
             raise EmptyQueueD()
         
 
-def buildException():
+def _build_exception():
     e = sys.exc_value
 #    if len( e.args ) > 1:
 #        eMsg = str(e.args)
@@ -70,13 +71,13 @@ def buildException():
     
     
 
-def worker(memoizeFolder=None):
+def worker():
     
     while True:
         comm.send((rank, ACTION_GET, None), dest=0)
         if verbose : print '%d waiting get' % (rank)
-        (taskId, f, args, kwArgs) = comm.recv(source=0)
-        if taskId == QUIT_SIGNAL : break 
+        (task_id, f, args, kwArgs) = comm.recv(source=0)
+        if task_id == QUIT_SIGNAL : break 
         
         if f is None: # nothing to do 
             out = None
@@ -87,32 +88,32 @@ def worker(memoizeFolder=None):
                 out = f(*args, **kwArgs)
 #                print out
             except Exception:
-                out = buildException()
+                out = _build_exception()
 
-        if taskId != NO_CALLBACK:
+        if task_id != NO_CALLBACK:
             if verbose : print 'Returning : %s from %d' % (str(f), rank)
-            comm.send((rank, ACTION_OUT, (taskId, out)), dest=0)
+            comm.send((rank, ACTION_OUT, (task_id, out)), dest=0)
 
 if rank > 0:
-    worker(None)
+    worker()
     sys.exit()
 
-class mainLoop(Thread):
+class MainLoop(Thread):
 
     def __init__(self, queue):
         Thread.__init__(self)
-        self.setDaemon(True)
+        self.setDaemon(True) # lets this thread closes itself when other threads are done
         self.queue = queue
         
     def run(self):
         queue = self.queue
-        taskId = 0
-        callbackDict = {}
+        task_id = 0
+        callback_dict = {}
         processes = size - 1 # number of active processes
         while True:
             
             if verbose : print 'listening ...'
-            (dstRank, action, data) = comm.recv(source=MPI.ANY_SOURCE)
+            (dst_rank, action, data) = comm.recv(source=MPI.ANY_SOURCE)
             if verbose : print 'Recieved action'
             if action == ACTION_GET:
                 
@@ -122,35 +123,35 @@ class mainLoop(Thread):
                     task = (None, None, None, None, None) # Will make the worker slightly wait and comeback
                     
                 if task is None:
-                    if verbose : print 'Killing process %d' % dstRank
-                    comm.send((QUIT_SIGNAL, None, None, None), dest=dstRank)
+                    if verbose : print 'Killing process %d' % dst_rank
+                    comm.send((QUIT_SIGNAL, None, None, None), dest=dst_rank)
                     processes -= 1
                     
                 else:
                     (f, args, kwArgs, callback, cbArgs) = task
                 
                     if callback is not None:
-                        callbackDict[taskId] = (callback, cbArgs)
-                        if verbose : print 'Sending to %d : %s(*%s,**%s) using callback : %s' % (dstRank, str(f), str(args), str(kwArgs), str(callback))
-    #                    strObj = dumps((taskId, f, args, kwArgs))
-                        comm.send((taskId, f, args, kwArgs), dest=dstRank)
-                        taskId += 1
+                        callback_dict[task_id] = (callback, cbArgs)
+                        if verbose : print 'Sending to %d : %s(*%s,**%s) using callback : %s' % (dst_rank, str(f), str(args), str(kwArgs), str(callback))
+    #                    strObj = dumps((task_id, f, args, kwArgs))
+                        comm.send((task_id, f, args, kwArgs), dest=dst_rank)
+                        task_id += 1
                     else: 
-                        comm.send((NO_CALLBACK, f, args, kwArgs), dest=dstRank)
+                        comm.send((NO_CALLBACK, f, args, kwArgs), dest=dst_rank)
                     
     
                                 
             elif action == ACTION_OUT:
-                (taskId_, out) = data
+                (task_id_, out) = data
 #                if isinstance(out,ExceptionInfo):
 #                    sys.stderr.write(out.tb)
 #                    comm.Abort(1)
                     
-                (callback, cbArgs) = callbackDict[taskId_]
-                if verbose : print 'Calling Back answer from %d with %s' % (dstRank, str(callback))
+                (callback, cbArgs) = callback_dict[task_id_]
+                if verbose : print 'Calling Back answer from %d with %s' % (dst_rank, str(callback))
                 callback(out,*cbArgs)
                 if verbose : print 'Callback done'
-                del callbackDict[taskId_]
+                del callback_dict[task_id_]
     
             if processes == 0:
                 break
@@ -215,9 +216,9 @@ class _Pool:
         self.size = size
         
         if verbose : print 'Starting mpiPool with %d process'%(size)
-        self.mainLoop = mainLoop(self.queue)
-        self.mainLoop.start()
-        atexit.register(self.stop)
+        self.main_loop = MainLoop(self.queue)
+        self.main_loop.start()
+        atexit.register(self.close)
     
     def __str__(self):
         return 'MpiPool of size %d'%self.size 
@@ -236,17 +237,13 @@ class _Pool:
 
     
     def join(self):
-        self.stop()
+        self.close()
 
 
     def close(self):
-        return self.stop()
-        
-    def stop(self):
-        if isMain:
-            for _i in xrange(size-1):
-                self.queue.put(None) # message for stopping a worker
-            self.mainLoop.join()
+        for _i in xrange(size-1):
+            self.queue.put(None) # message for stopping a worker
+        self.main_loop.join()
 
 
 
@@ -259,7 +256,6 @@ class _SinglePool:
         # useless, but in case something wants to access this variable
         self.queue = QueueD() 
         self.size = size
-        self.isMain = isMain
         
     
     def apply_async(self, f, args=(), kwArgs={}, callback=None, cbArgs=()):
@@ -269,14 +265,12 @@ class _SinglePool:
         apply_result._set(out)
         return apply_result
 
-    def stop(self):
+    def close(self):
         pass
     
     def join(self):
-        self.stop()
+        pass
     
-#    def start(self,memoizeFolder=None):
-#        return True
 
 if size == 1:
     pool = _SinglePool()
