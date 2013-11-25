@@ -5,6 +5,7 @@ import cPickle
 from os import environ
 
 
+
 # load the callable object
 with open( 'callable.pkl', 'r' ) as fd:
     job = cPickle.load( fd )
