@@ -17,32 +17,34 @@ class PbsDispatcher(d.Dispatcher):
     
     
     def submit( self, job ):
-        
+        projectId = getattr(self,'projectId',None)
+
         scriptPath = job._writeSubmitScript()
         pbsQsub( scriptPath, job.conf.queue, job.folder, 
             job.conf.name, job.conf.walltime , job.conf.nNode, job.conf.ppn,
             envVarL=['RUN_CALLABLE'],
             stdout='submit.stdout',
-            stderr='submit.stderr', projectId=self.projectId  )
+            stderr='submit.stderr', projectId=projectId  )
 
 class MoabDispatcher(d.Dispatcher):
     
-    def __init__(self, projectId = None,verbose=1 ):
-        d.Dispatcher.__init__(self,verbose) 
-        self.projectId = projectId
+#    def __init__(self, projectId = None,verbose=1 ):
+#        d.Dispatcher.__init__(self,verbose) 
+#        self.projectId = projectId
     
     def __str__(self):
         return "MoabDispatcher"
     
     
     def submit( self, job ):
+        projectId = getattr(self,'projectId',None)
         
         scriptPath = job._writeSubmitScript()
         pbsQsub( scriptPath, job.conf.queue, job.folder, 
             job.conf.name, job.conf.walltime , job.conf.nNode, job.conf.ppn,
             envVarL=['RUN_CALLABLE'],
             stdout='submit.stdout',
-            stderr='submit.stderr', projectId=self.projectId, cmdName='msub'  )
+            stderr='submit.stderr', projectId=projectId, cmdName='msub'  )
 
     
 class SgeDispatcher(d.Dispatcher):
@@ -159,10 +161,17 @@ def getHostDispatcher():
     if dispatcherType not in dispatcherMap:
         raise UnknownDispatcherType('Invalid dispatcher! Please, use one of {%s}'%(', '.join( dispatcherMap.keys() )) )
     
-    argD = {}
-    if 'DISPATCHER_QUEUE' in environ:
-        argD['queue'] = environ['DISPATCHER_QUEUE']
-    if 'PROJECT_ID' in environ:
-        argD['projectId'] = environ['PROJECT_ID']
+#    argD = {}
+#    if 'DISPATCHER_QUEUE' in environ:
+#        argD['queue'] = environ['DISPATCHER_QUEUE']
+#    if 'PROJECT_ID' in environ:
+#        argD['projectId'] = environ['PROJECT_ID']
 
-    return dispatcherMap[dispatcherType]( **argD )
+
+    dispatcher =  dispatcherMap[dispatcherType]()
+    dispatcher.projectId = environ.get("PROJECT_ID",None)
+    
+    return dispatcher
+
+    
+    
