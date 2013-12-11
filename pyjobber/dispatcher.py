@@ -23,7 +23,7 @@ class PbsDispatcher(d.Dispatcher):
             job.conf.name, job.conf.walltime , job.conf.nNode, job.conf.ppn,
             envVarL=['RUN_CALLABLE'],
             stdout='submit.stdout',
-            stderr='submit.stderr'  )
+            stderr='submit.stderr', projectId=self.projectId  )
 
 class MoabDispatcher(d.Dispatcher):
     
