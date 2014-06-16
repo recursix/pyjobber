@@ -8,12 +8,12 @@ Created on Apr 12, 2013
 
 
 #from jobDispatcher.mpi.mpiPool import pool
-from multiprocessing import Pool
+# from multiprocessing import Pool
 import sys
 from traceback import format_exc
 from threading import RLock
 
-pool = Pool()
+# pool = Pool()
 
 def print_exception(exception):
     try:
