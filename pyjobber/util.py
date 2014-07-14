@@ -4,10 +4,13 @@ Created on 2012-06-20
 
 @author: alexandre
 '''
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 from os import path
-import cPickle
 import gzip
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 
 def replaceD( str_, rDict):
@@ -38,14 +41,14 @@ def readFile( *args ):
     filePath = path.join( *args )
     if not path.exists( filePath ):
         return None
-    with open( filePath, 'r' ) as fd:
+    with open( filePath, 'rb' ) as fd:
         return fd.read() 
     
 def readFileGz( *args ):
     filePath = path.join( *args )
     if not path.exists( filePath ):
         return None
-    with gzip.open( filePath, 'r' ) as fd:
+    with gzip.open( filePath, 'rb' ) as fd:
         return fd.read()   
 
 
@@ -55,17 +58,17 @@ def writePkl( obj, *args, **kwArgs ):
     the fileName is path.join(*args)
     """
     pklPath = path.join( *args )
-    with open( pklPath, 'w' ) as fd:            
-        cPickle.dump( obj, fd, cPickle.HIGHEST_PROTOCOL )
+    with open( pklPath, 'wb' ) as fd:            
+        pickle.dump( obj, fd, pickle.HIGHEST_PROTOCOL )
 
 
 #def writePklz( obj, *args ):
-#    writeFile( zlib.compress( cPickle.dumps(obj,cPickle.HIGHEST_PROTOCOL) ), *args )
+#    writeFile( zlib.compress( pickle.dumps(obj,pickle.HIGHEST_PROTOCOL) ), *args )
 #
 #def readPklz( *args ):
 #    with open( path.join(*args), 'r' ) as fd:
 #        data = fd.read() 
-#    return cPickle.loads(zlib.decompress( data ))
+#    return pickle.loads(zlib.decompress( data ))
 #        
 def readPkl( *args, **kwArgs ):
     """
@@ -73,9 +76,9 @@ def readPkl( *args, **kwArgs ):
     the fileName is path.join(*args)
     """
     try:
-        with open( path.join( *args ), 'r') as fd: return cPickle.load(fd)
+        with open( path.join( *args ), 'rb') as fd: return pickle.load(fd)
     except IOError: 
-        if kwArgs.has_key('defaultVal'): return kwArgs['defaultVal']
+        if 'defaultVal' in kwArgs: return kwArgs['defaultVal']
         else: raise
 
 minute = 60

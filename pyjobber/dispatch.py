@@ -1,12 +1,17 @@
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 from os import path
 import os
-from util import readFile, writeFile, readPkl, writePkl, replaceD, readFileGz, Callable
+from pyjobber.util import readFile, writeFile, readPkl, writePkl, replaceD, readFileGz, Callable
 import subprocess as sp
 import time as t
 import re
 import sys
 
+# Support both python 2 and 3
+try:
+    range = xrange
+except NameError:
+    pass
 
 # gather some paths
 jobDispatcherFolder = path.dirname( path.abspath( __file__ ) )
@@ -17,7 +22,7 @@ linkChildPath = path.join( jobDispatcherFolder, 'linkChild.py' )
 
 if not 'EXPERIMENTS_FOLDER' in os.environ:
     experimentsFolder = path.expandvars( path.join( "$HOME", 'experimentsFolder' ) )
-    print "WARNING : environment variable $EXPERIMENTS_FOLDER not defined, using %s"%experimentsFolder
+    print("WARNING : environment variable $EXPERIMENTS_FOLDER not defined, using %s"%experimentsFolder)
 else:
     experimentsFolder = os.environ['EXPERIMENTS_FOLDER']
 
@@ -94,7 +99,7 @@ class Std:
         for line in content.splitlines():
             match = self.mpiPattern.match(line)
             if match is None: 
-#                print 'not matching line %s'%line
+#                print('not matching line %s'%line)
                 return False
             
             key = match.group(1)
@@ -107,7 +112,7 @@ class Std:
     
     def __str__(self):
         strL = []
-        keyL = self.stdout.keys()
+        keyL = list(self.stdout.keys())
         keyL.sort()
         for key in keyL:
             if len(self.stdout[key].strip()) > 0: 
@@ -195,7 +200,7 @@ class Job:
     def writeCmd(self, cmd ):
         cmdPath = path.join( self.folder, 'run' )
         writeFile( cmd, cmdPath  )
-        os.chmod( cmdPath, 0755 )
+        os.chmod( cmdPath, 0o755 )
 
     def _writeSubmitScript(self):
         """mostly to be able to source .qsubrc on linux or qsubrc.bat on windows"""
@@ -219,7 +224,7 @@ class Job:
                     
             cmdL.append('"%s" "%s"'%( sys.executable, launcherPath ) )
         writeFile( '\n'.join( cmdL ), scriptPath )
-        os.chmod(scriptPath, 0755)
+        os.chmod(scriptPath, 0o755)
         return scriptPath
         
     
@@ -243,7 +248,7 @@ class Job:
         scriptPath = self._writeSubmitScript()
         stdout, _stderr = call_err( [scriptPath], cwd=self.folder,linkChild=True )
         if len(stdout.strip()) > 0: # should be empty but can be useful for debugging purpose
-            print stdout
+            print(stdout)
             
     def getState(self):
         stateStr = readFile( self.folder, 'jobState' )
@@ -308,7 +313,7 @@ class Experiment:
                 jobList.append( Job(cwd) )
                 
             # don't walk through hidden dirs
-            for i in reversed( xrange( len(dirs ) ) ):
+            for i in reversed( range( len(dirs ) ) ):
                 if dirs[i].startswith('.'): del dirs[i]
                 
         return jobList
@@ -350,10 +355,10 @@ class Dispatcher:
                     if ppn is not None: job.setConf( ppn = ppn )
                 
                 if self.verbose >0:
-                    print '%s submitting %s'%(str(self),str(job.conf))
+                    print('%s submitting %s'%(str(self),str(job.conf)))
                 self.submit(job)
             else:
-                print 'skipping : %s'%job.folder
+                print('skipping : %s'%job.folder)
 
     
 def call_err(*popenargs, **kwargs):

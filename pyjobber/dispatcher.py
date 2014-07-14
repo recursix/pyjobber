@@ -4,7 +4,8 @@ Created on May 30, 2010
 @author: alex
 '''
 
-import dispatch as d
+from __future__ import print_function
+from pyjobber import dispatch as d
 import subprocess as sp
 from os import path, environ
 
@@ -74,9 +75,9 @@ class SequentialDispatcher(d.Dispatcher):
         if job.conf.ppn is None:
             import multiprocessing as mp
             nCpu = mp.cpu_count()
-            if self.verbose > 0 : print "nCpu is unspecified. Using %d cpu."%nCpu 
+            if self.verbose > 0 : print("nCpu is unspecified. Using %d cpu."%nCpu)
             job.setConf( ppn=nCpu)
-        if self.verbose > 0 : print '%s running %s'%( str(self), str(job.conf) )
+        if self.verbose > 0 : print('%s running %s'%( str(self), str(job.conf)))
         job.run()
 
     
@@ -105,7 +106,7 @@ def pbsQsub( cmd, queue=None, wd=None, name=None,
     
 
     cmdL.append( cmd )
-    print ' '.join( cmdL )
+    print(' '.join( cmdL ))
     sp.call(cmdL)
     
     
@@ -136,7 +137,7 @@ def sgeQsub( cmd, argL=[], jobName=None, projectName=None, queue=None, wd=None,
     
     cmdL.append( cmd )
     if len(argL) > 0: cmdL += [ '--' ] + argL 
-    print ' '.join( cmdL )
+    print(' '.join( cmdL ))
     sp.call(cmdL)
 
 
@@ -153,7 +154,7 @@ dispatcherMap = {
 
 def getHostDispatcher():
     if not 'DISPATCHER_TYPE' in environ: 
-        print "WARNING : environment variable $DISPATCHER_TYPE is not defined, using SequentialDispatcher"
+        print("WARNING : environment variable $DISPATCHER_TYPE is not defined, using SequentialDispatcher")
         dispatcherType= "SequentialDispatcher"
     else : 
         dispatcherType = environ['DISPATCHER_TYPE']

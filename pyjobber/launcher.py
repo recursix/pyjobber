@@ -4,7 +4,7 @@ Created on 2012-07-05
 
 @author: alexandre
 '''
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 
 
 import time as t
@@ -24,10 +24,16 @@ import subprocess as sp
 import sys
 import os
 import gzip
-import cPickle
 import signal
-import thread
 from pyjobber import dispatch
+
+# Python 2 and 3 support
+try:
+    import cPickle as pickle
+    import thread
+except:
+    import pickle
+    import _thread as thread
 
 # gather some paths
 stdoutPath = join( wd, 'stdout' )
@@ -42,14 +48,14 @@ qsubrcPath = path.expandvars( join( "$HOME", '.qsubrc' ) )
 
 
 def readPkl( *args ):
-    with open( path.join( *args ), 'r') as fd: 
-        return cPickle.load(fd)
+    with open( path.join( *args ), 'rb') as fd: 
+        return pickle.load(fd)
 
 def dieWithParent(pid, delay=0.1, sig=signal.SIGTERM):
     while True:
         t.sleep(delay)
         if os.getppid() == 1:
-            print 'exiting %d'%os.getpid()
+            print('exiting %d'%os.getpid())
             os.kill(pid, sig)
             break
 
@@ -64,7 +70,7 @@ def findNcpu(nCpu,nNode,ppn):
     if ppn is None:
         import multiprocessing
         ppn = multiprocessing.cpu_count()
-        print "Warning, unknown number of processor per node (ppn). Multiprocessing is reporting %d"%ppn 
+        print("Warning, unknown number of processor per node (ppn). Multiprocessing is reporting %d"%ppn)
     
     return nNode*ppn
 
@@ -97,7 +103,7 @@ os.chdir(wd) # makes sure that the qsubrc didn't changed the current working dir
 
 
 # run the program
-print ' '.join( argL )
+print(' '.join( argL))
 with open( stdoutPath, 'a+' ) as stdout: 
     with  open( stderrPath, 'a+' ) as stderr:
         p = sp.Popen( argL, stdout=stdout, stderr=stderr,  cwd=wd )

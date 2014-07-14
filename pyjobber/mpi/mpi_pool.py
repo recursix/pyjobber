@@ -4,7 +4,7 @@ Created on Jun 7, 2010
 @author: alex
 '''
 
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 
 from threading import Thread, RLock 
 import time
@@ -12,7 +12,13 @@ import sys
 import traceback
 from socket import gethostname
 import atexit
-from cPickle import dumps
+
+# Python 2 and 3 support
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 
 ACTION_GET = 1
 ACTION_OUT = 2
@@ -29,7 +35,7 @@ try:
 except:
     size = 1
     rank = 0
-    print "WARNING : mpi4py not installed. Will run in single process."
+    print("WARNING : mpi4py not installed. Will run in single process.")
 
 verbose = False
 class EmptyQueueD(Exception): pass
@@ -81,7 +87,7 @@ def worker():
     
     while True:
         comm.send((rank, ACTION_GET, None), dest=0)
-        if verbose : print '%d waiting get' % (rank)
+        if verbose : print('%d waiting get' % (rank))
         
         (task_id, f, args, kwArgs) = recv(source=0)
         if task_id == QUIT_SIGNAL : break 
@@ -91,14 +97,14 @@ def worker():
             time.sleep(0.1) # ... just wait a little bit
         else:
             try: 
-                if verbose : print 'Executing : %s on %d' % (str(f), rank)
+                if verbose : print('Executing : %s on %d' % (str(f), rank))
                 out = f(*args, **kwArgs)
-#                print out
+#                print(out)
             except Exception:
                 out = _build_exception()
 
         if task_id != NO_CALLBACK:
-            if verbose : print 'Returning : %s from %d' % (str(f), rank)
+            if verbose : print('Returning : %s from %d' % (str(f), rank))
             comm.send((rank, ACTION_OUT, (task_id, out)), dest=0)
 
 if rank > 0:
@@ -119,9 +125,9 @@ class MainLoop(Thread):
         processes = size - 1 # number of active processes
         while True:
             
-            if verbose : print 'listening ...'
+            if verbose : print('listening ...')
             (dst_rank, action, data) = recv(source=MPI.ANY_SOURCE)
-            if verbose : print 'Recieved action'
+            if verbose : print('Recieved action')
             if action == ACTION_GET:
                 
                 try:
@@ -130,7 +136,7 @@ class MainLoop(Thread):
                     task = (None, None, None, None, None) # Will make the worker slightly wait and comeback
                     
                 if task is None:
-                    if verbose : print 'Killing process %d' % dst_rank
+                    if verbose : print('Killing process %d' % dst_rank)
                     comm.send((QUIT_SIGNAL, None, None, None), dest=dst_rank)
                     processes -= 1
                     
@@ -139,8 +145,8 @@ class MainLoop(Thread):
                 
                     if callback is not None:
                         callback_dict[task_id] = (callback, cbArgs)
-                        if verbose : print 'Sending to %d : %s(*%s,**%s) using callback : %s' % (dst_rank, str(f), str(args), str(kwArgs), str(callback))
-    #                    strObj = dumps((task_id, f, args, kwArgs))
+                        if verbose : print('Sending to %d : %s(*%s,**%s) using callback : %s' % (dst_rank, str(f), str(args), str(kwArgs), str(callback)))
+    #                    strObj = pickle.dumps((task_id, f, args, kwArgs))
                         comm.send((task_id, f, args, kwArgs), dest=dst_rank)
                         task_id += 1
                     else: 
@@ -153,9 +159,9 @@ class MainLoop(Thread):
 
                     
                 (callback, cbArgs) = callback_dict[task_id_]
-                if verbose : print 'Calling Back answer from %d with %s' % (dst_rank, str(callback))
+                if verbose : print('Calling Back answer from %d with %s' % (dst_rank, str(callback)))
                 callback(out,*cbArgs)
-                if verbose : print 'Callback done'
+                if verbose : print('Callback done')
                 del callback_dict[task_id_]
     
             if processes == 0:
@@ -220,7 +226,7 @@ class _Pool:
         self.queue = QueueD()
         self.size = size
         
-        if verbose : print 'Starting mpiPool with %d process'%(size)
+        if verbose : print('Starting mpiPool with %d process'%(size))
         self.main_loop = MainLoop(self.queue)
         self.main_loop.start()
         atexit.register(self.close)
@@ -234,7 +240,7 @@ class _Pool:
         
         # if these objects are not picklable, this will raise the 
         # error in the main thread instead of later in the queue thread
-        _dataStr = dumps( (f,args, kwArgs) )    
+        _dataStr = pickle.dumps( (f,args, kwArgs) )    
                                                 
         apply_result = ApplyResult( callback, cbArgs )
         self.queue.put( (f, args, kwArgs, apply_result._set, () ) )

@@ -5,7 +5,7 @@ Created on Jan 31, 2011
 @author: alex
 '''
 
-
+from __future__ import print_function
 import sys
 from os import path
 from jobDispatcher import dispatch

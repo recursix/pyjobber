@@ -5,8 +5,7 @@ Created on Apr 12, 2013
 @author: alexandre
 '''
 
-
-
+from __future__ import print_function
 #from jobDispatcher.mpi.mpiPool import pool
 # from multiprocessing import Pool
 import sys
@@ -189,9 +188,9 @@ def test_object_async():
     
 
     a.b = 3
-    print a.b
-    print a.c
-    print a._pending
+    print(a.b)
+    print(a.c)
+    print(a._pending)
 
 if __name__ == "__main__":
     test_object_async()

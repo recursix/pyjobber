@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 
 from __future__ import with_statement
-import cPickle
 from os import environ
+
+# Python 2 and 3 support
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 
 
 # load the callable object
-with open( 'callable.pkl', 'r' ) as fd:
-    job = cPickle.load( fd )
+with open( 'callable.pkl', 'rb' ) as fd:
+    job = pickle.load( fd )
 
 # run the callable
 out = job()
@@ -20,6 +25,6 @@ if out is not None:
     else:
         outName = 'out.pkl' 
         
-    with open( outName, 'w' ) as fd:
-        cPickle.dump( out, fd, 2 )
+    with open( outName, 'wb' ) as fd:
+        pickle.dump( out, fd, 2 )
 
