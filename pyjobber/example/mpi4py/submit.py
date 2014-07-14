@@ -2,15 +2,16 @@
 '''
 Dummy example to show how you can use MPI to compute the sum of elements.
 '''
+from __future__ import print_function
 import sys
-from jobDispatcher import dispatcher
-from jobDispatcher.dispatch import newExperiment
+from pyjobber import dispatcher
+from pyjobber.dispatch import newExperiment
 
 # When importing your function, use the full module name from the actual PYTHONPATH
 # if you use "from sum import parallelSum", it will work for this script, but you'll get an 
 # ImportError when loading the function at execution of your job.
 # The same problem happens if you define your function in the __main__ module 
-from jobDispatcher.example.mpi4py.sum import parallelSum 
+from pyjobber.example.mpi4py.sum import parallelSum 
 
 
 # In general, the dispatcher, need to know either the number of cores requested (nCpu) 
@@ -30,7 +31,7 @@ else:                 queue = None
 n = int(1e8) # summation will go from 0 to n
 
 experiment = newExperiment('sum') # you always need to create an experiment first
-print experiment.folder
+print(experiment.folder)
 
 job = experiment.newJob('sum') # an experiment usually have several jobs, in our case, we'll only have one 
 job.setConf(nNode=nNode, mpi=True, walltime = walltime, queue=queue) # set the configuration file

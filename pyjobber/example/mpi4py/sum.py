@@ -7,11 +7,15 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
+# Python 2 and 3 support
+try:
+    range = xrange
+except NameError:
+    pass
 
 
 def parallelSum(end):
-    return sum(xrange(rank,end, size))
-    
+    return sum(range(rank,end, size))
 
 
 if __name__ == "__main__":
