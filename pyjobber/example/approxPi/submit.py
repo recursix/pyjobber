@@ -5,16 +5,16 @@ as well as any scheduler supported by jobDispatcher
 '''
 
 import sys
-from jobDispatcher import dispatcher
-from jobDispatcher.dispatch import newExperiment
+from pyjobber import dispatcher
+from pyjobber.dispatch import newExperiment
 
-print "using the following version : ", dispatcher.__file__
+print("using the following version : ", dispatcher.__file__)
 
 # When importing your function, use the full module name from the actual PYTHONPATH
 # if you use "from approxPi import approxPi", it will work for this script, but you'll get an 
 # ImportError when loading the function at execution of your job.
 # The same problem happens if you define your function in the __main__ module 
-from jobDispatcher.example.approxPi.approxPi import approxPi 
+from pyjobber.example.approxPi.approxPi import approxPi 
 
 
 # In general, the dispatcher, need to know either the number of cores requested (nCpu) 
@@ -36,7 +36,7 @@ else:                 queue = None
 nSamples = 500000
 
 experiment = newExperiment('approxPi')
-print experiment.folder
+print(experiment.folder)
 
 for i in range(nJob): 
     

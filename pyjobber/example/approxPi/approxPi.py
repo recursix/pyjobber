@@ -7,10 +7,16 @@ Created on 2012-06-21
 
 from random import random
 
+# Python 2 and 3 support
+try:
+    range = xrange
+except NameError:
+    pass
+
 
 def approxPi(nSamples):
     count = 0
-    for _i in xrange(nSamples):
+    for _i in range(nSamples):
         x = random()
         y = random()
         if x**2 + y**2 < 1:
@@ -20,5 +26,5 @@ def approxPi(nSamples):
 
 
 if __name__ == "__main__":
-    print approxPi(1000000)
+    print(approxPi(1000000))
     
