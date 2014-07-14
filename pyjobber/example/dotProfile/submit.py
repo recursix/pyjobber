@@ -4,15 +4,16 @@ Simple script that submit jobs for profiling numpy.dot. This script should work 
 as well as any scheduler supported by jobDispatcher 
 '''
 
-from jobDispatcher import dispatcher
-from jobDispatcher.dispatch import newExperiment
+from __future__ import print_function
+from pyjobber import dispatcher
+from pyjobber.dispatch import newExperiment
 
 
 # When importing your function, use the full module name from the actual PYTHONPATH
 # if you use "from approxPi import approxPi", it will work for this script, but you'll get an 
 # ImportError when loading the function at execution of your job.
 # The same problem happens if you define your function in the __main__ module 
-from jobDispatcher.example.dotProfile.dotProfile import dotProfileList 
+from pyjobber.example.dotProfile.dotProfile import dotProfileList 
 
 
 # In general, the dispatcher, need to know either the number of cores requested (nCpu) 
@@ -27,7 +28,7 @@ walltime = 60*30 # some clusters requires a walltime to be between some minimum 
 
 
 experiment = newExperiment('dotProfile')
-print experiment.folder
+print(experiment.folder)
 
 job = experiment.newJob( 'job' )
 job.setConf(nNode = nNode, mpi=True, walltime = walltime) # set the configuration file

@@ -4,7 +4,8 @@ Created on 2012-07-04
 
 @author: alexandre
 '''
-from jobDispatcher.dispatch import getLastExperiment
+from __future__ import print_function
+from pyjobber.dispatch import getLastExperiment
 from dotProfile import plotResult
 
 experiment = getLastExperiment()
@@ -15,7 +16,7 @@ job = list(experiment)[0]
 resD = job.getResultList()[0]
 
 
-print job.getStdout()
-print job.getStderr()
+print(job.getStdout())
+print(job.getStderr())
 
 plotResult(resD)

@@ -5,12 +5,11 @@ Created on Apr 12, 2013
 @author: alexandre
 '''
 
-
-
+from __future__ import print_function
 import time as t
-
 import numpy as np
-from jobDispatcher.mpi.async import AsyncFunc, dict_async, pool
+from pyjobber.mpi.async import AsyncFunc, AsyncDict
+from pyjobber.mpi.mpi_pool import pool
 
 
 def dotProfile( m,n,k, nRepeat ):
@@ -42,7 +41,7 @@ def dotProfileList(m,n,kMax,repeatFactor=1e7):
     
     pool.start() # only mpi rank 0 will continue after this call
     
-    result = dict_async()  
+    result = AsyncDict()  
     for k in range(1,kMax):
         nRepeat = int(repeatFactor/(m*n*k))
         result[k] = AsyncFunc(dotProfile)( m,n,k, nRepeat )
@@ -64,4 +63,4 @@ def plotResult(resD):
 if __name__ == "__main__":
     resD = dotProfileList(100,100,100)
     plotResult(resD)
-#    print resD
+#    print(resD)
