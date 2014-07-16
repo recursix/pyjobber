@@ -16,6 +16,7 @@ import atexit
 # Python 2 and 3 support
 try:
     import cPickle as pickle
+    range = xrange
 except:
     import pickle
 
@@ -252,7 +253,7 @@ class _Pool:
 
 
     def close(self):
-        for _i in xrange(size-1):
+        for _i in range(size-1):
             self.queue.put(None) # message for stopping a worker
         self.main_loop.join()
 
