@@ -68,7 +68,12 @@ class QueueD:
         
 
 def _build_exception():
-    e = sys.exc_value
+    try:
+        # Python 2
+        e = sys.exc_value
+    except:
+        # Python 3
+        e = sys.exc_info()[1]
 #    if len( e.args ) > 1:
 #        eMsg = str(e.args)
 #    else:
