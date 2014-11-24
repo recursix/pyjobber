@@ -11,7 +11,7 @@ from threading import Thread
 import time as t
 from graalUtil import file
 import os
-from mpi.mpiPool import pool
+from mpi.mpi_pool import pool
 from os import path
 
 
@@ -39,7 +39,7 @@ class BackedUpMpiPoolJob:
             
         async_result = self.func( *self.arg_list, **self.arg_dict )
         bkp = Bkp( async_result, delay=self.bkp_delay )  # this will periodically backup the result
-        print 'backup started'
+        print('backup started')
         pool.stop()
         bkp.backup() # one last backup
         bkp.stop()
@@ -91,7 +91,7 @@ class Bkp(Thread):
         except RuntimeError:
             if self.done: raise
             else:
-                print 'Error occurred during backup. Will try again...'
+                print('Error occurred during backup. Will try again...')
         
             
     def stop(self):
